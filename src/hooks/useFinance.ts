@@ -3,7 +3,8 @@ import type {
   Income, IncomeType, Expense, ExpenseType,
   Asset, AssetType, Liability, LoanType, CreditCard, CreditCardType,
   DebitCard, DebitCardType, SavingsGoal, PaymentReminder, FinancialAnalysis,
-  RepaymentMethod
+  RepaymentMethod, CompanyEquity, CompanyEquityMonthlyRecord,
+  InvestmentAccount, InvestmentHolding, InvestmentTransaction
 } from '@/types/finance';
 
 // 本地存储键名
@@ -21,6 +22,8 @@ const STORAGE_KEYS = {
   debitCardTypes: 'cf_debit_card_types',
   debitCards: 'cf_debit_cards',
   savingsGoals: 'cf_savings_goals',
+  companyEquities: 'cf_company_equities',
+  investmentAccounts: 'cf_investment_accounts',
 };
 
 // 默认收入类型
@@ -58,6 +61,7 @@ const defaultAssetTypes: AssetType[] = [
   { id: 'bond', name: '债券', icon: 'FileText', color: '#f59e0b', isDefault: true },
   { id: 'property', name: '房产', icon: 'Home', color: '#06b6d4', isDefault: true },
   { id: 'crypto', name: '加密货币', icon: 'Bitcoin', color: '#f97316', isDefault: true },
+  { id: 'company_equity', name: '公司股权', icon: 'Building2', color: '#ec4899', isDefault: true },
   { id: 'other', name: '其他', icon: 'MoreHorizontal', color: '#6b7280', isDefault: true },
 ];
 
@@ -234,6 +238,16 @@ export function useFinance() {
     loadFromStorage(STORAGE_KEYS.savingsGoals, [])
   );
 
+  // 公司股权
+  const [companyEquities, setCompanyEquities] = useState<CompanyEquity[]>(() =>
+    loadFromStorage(STORAGE_KEYS.companyEquities, [])
+  );
+
+  // 投资账户
+  const [investmentAccounts, setInvestmentAccounts] = useState<InvestmentAccount[]>(() =>
+    loadFromStorage(STORAGE_KEYS.investmentAccounts, [])
+  );
+
   // 保存数据到本地存储
   useEffect(() => saveToStorage(STORAGE_KEYS.incomeTypes, incomeTypes), [incomeTypes]);
   useEffect(() => saveToStorage(STORAGE_KEYS.incomes, incomes), [incomes]);
@@ -248,6 +262,8 @@ export function useFinance() {
   useEffect(() => saveToStorage(STORAGE_KEYS.debitCardTypes, debitCardTypes), [debitCardTypes]);
   useEffect(() => saveToStorage(STORAGE_KEYS.debitCards, debitCards), [debitCards]);
   useEffect(() => saveToStorage(STORAGE_KEYS.savingsGoals, savingsGoals), [savingsGoals]);
+  useEffect(() => saveToStorage(STORAGE_KEYS.companyEquities, companyEquities), [companyEquities]);
+  useEffect(() => saveToStorage(STORAGE_KEYS.investmentAccounts, investmentAccounts), [investmentAccounts]);
 
   // ========== 收入管理 ==========
   const addIncome = useCallback((income: Omit<Income, 'id'>) => {
@@ -418,6 +434,173 @@ export function useFinance() {
     setSavingsGoals(prev => prev.filter(g => g.id !== id));
   }, []);
 
+  // ========== 公司股权管理 ==========
+  const addCompanyEquity = useCallback((equity: Omit<CompanyEquity, 'id' | 'monthlyRecords'>) => {
+    const newEquity: CompanyEquity = { 
+      ...equity, 
+      id: Date.now().toString(),
+      monthlyRecords: []
+    };
+    setCompanyEquities(prev => [...prev, newEquity]);
+    return newEquity.id;
+  }, []);
+
+  const updateCompanyEquity = useCallback((id: string, updates: Partial<CompanyEquity>) => {
+    setCompanyEquities(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e));
+  }, []);
+
+  const deleteCompanyEquity = useCallback((id: string) => {
+    setCompanyEquities(prev => prev.filter(e => e.id !== id));
+  }, []);
+
+  // 添加公司股权月度记录
+  const addCompanyEquityMonthlyRecord = useCallback((equityId: string, record: Omit<CompanyEquityMonthlyRecord, 'id'>) => {
+    const newRecord: CompanyEquityMonthlyRecord = { ...record, id: Date.now().toString() };
+    setCompanyEquities(prev => prev.map(e => {
+      if (e.id === equityId) {
+        return {
+          ...e,
+          monthlyRecords: [...e.monthlyRecords, newRecord]
+        };
+      }
+      return e;
+    }));
+    return newRecord.id;
+  }, []);
+
+  // 删除公司股权月度记录
+  const deleteCompanyEquityMonthlyRecord = useCallback((equityId: string, recordId: string) => {
+    setCompanyEquities(prev => prev.map(e => {
+      if (e.id === equityId) {
+        return {
+          ...e,
+          monthlyRecords: e.monthlyRecords.filter(r => r.id !== recordId)
+        };
+      }
+      return e;
+    }));
+  }, []);
+
+  // ========== 投资账户管理 ==========
+  const addInvestmentAccount = useCallback((account: Omit<InvestmentAccount, 'id' | 'holdings' | 'transactions'>) => {
+    const newAccount: InvestmentAccount = {
+      ...account,
+      id: Date.now().toString(),
+      holdings: [],
+      transactions: []
+    };
+    setInvestmentAccounts(prev => [...prev, newAccount]);
+    return newAccount.id;
+  }, []);
+
+  const updateInvestmentAccount = useCallback((id: string, updates: Partial<InvestmentAccount>) => {
+    setInvestmentAccounts(prev => prev.map(a => a.id === id ? { ...a, ...updates } : a));
+  }, []);
+
+  const deleteInvestmentAccount = useCallback((id: string) => {
+    setInvestmentAccounts(prev => prev.filter(a => a.id !== id));
+  }, []);
+
+  // 添加持仓
+  const addInvestmentHolding = useCallback((accountId: string, holding: Omit<InvestmentHolding, 'id' | 'marketValue' | 'profitLoss' | 'profitLossRate'>) => {
+    const marketValue = holding.currentPrice * holding.quantity;
+    const cost = holding.avgCost * holding.quantity;
+    const profitLoss = marketValue - cost;
+    const profitLossRate = cost > 0 ? (profitLoss / cost) * 100 : 0;
+
+    const newHolding: InvestmentHolding = {
+      ...holding,
+      id: Date.now().toString(),
+      marketValue,
+      profitLoss,
+      profitLossRate
+    };
+
+    setInvestmentAccounts(prev => prev.map(a => {
+      if (a.id === accountId) {
+        const newHoldings = [...a.holdings, newHolding];
+        const newTotalValue = newHoldings.reduce((sum, h) => sum + h.marketValue, 0) + a.cashBalance;
+        const newTotalCost = newHoldings.reduce((sum, h) => sum + h.avgCost * h.quantity, 0);
+        const newTotalProfitLoss = newTotalValue - a.cashBalance - newTotalCost;
+        return {
+          ...a,
+          holdings: newHoldings,
+          totalValue: newTotalValue,
+          totalCost: newTotalCost,
+          totalProfitLoss: newTotalProfitLoss
+        };
+      }
+      return a;
+    }));
+    return newHolding.id;
+  }, []);
+
+  // 更新持仓
+  const updateInvestmentHolding = useCallback((accountId: string, holdingId: string, updates: Partial<InvestmentHolding>) => {
+    setInvestmentAccounts(prev => prev.map(a => {
+      if (a.id === accountId) {
+        const newHoldings = a.holdings.map(h => {
+          if (h.id === holdingId) {
+            const updated = { ...h, ...updates };
+            // 重新计算市值和盈亏
+            updated.marketValue = updated.currentPrice * updated.quantity;
+            const cost = updated.avgCost * updated.quantity;
+            updated.profitLoss = updated.marketValue - cost;
+            updated.profitLossRate = cost > 0 ? (updated.profitLoss / cost) * 100 : 0;
+            return updated;
+          }
+          return h;
+        });
+        const newTotalValue = newHoldings.reduce((sum, h) => sum + h.marketValue, 0) + a.cashBalance;
+        const newTotalCost = newHoldings.reduce((sum, h) => sum + h.avgCost * h.quantity, 0);
+        const newTotalProfitLoss = newTotalValue - a.cashBalance - newTotalCost;
+        return {
+          ...a,
+          holdings: newHoldings,
+          totalValue: newTotalValue,
+          totalCost: newTotalCost,
+          totalProfitLoss: newTotalProfitLoss
+        };
+      }
+      return a;
+    }));
+  }, []);
+
+  // 删除持仓
+  const deleteInvestmentHolding = useCallback((accountId: string, holdingId: string) => {
+    setInvestmentAccounts(prev => prev.map(a => {
+      if (a.id === accountId) {
+        const newHoldings = a.holdings.filter(h => h.id !== holdingId);
+        const newTotalValue = newHoldings.reduce((sum, h) => sum + h.marketValue, 0) + a.cashBalance;
+        const newTotalCost = newHoldings.reduce((sum, h) => sum + h.avgCost * h.quantity, 0);
+        const newTotalProfitLoss = newTotalValue - a.cashBalance - newTotalCost;
+        return {
+          ...a,
+          holdings: newHoldings,
+          totalValue: newTotalValue,
+          totalCost: newTotalCost,
+          totalProfitLoss: newTotalProfitLoss
+        };
+      }
+      return a;
+    }));
+  }, []);
+
+  // 添加交易记录
+  const addInvestmentTransaction = useCallback((accountId: string, transaction: Omit<InvestmentTransaction, 'id'>) => {
+    const newTransaction: InvestmentTransaction = { ...transaction, id: Date.now().toString() };
+    setInvestmentAccounts(prev => prev.map(a => {
+      if (a.id === accountId) {
+        return {
+          ...a,
+          transactions: [...a.transactions, newTransaction]
+        };
+      }
+      return a;
+    }));
+    return newTransaction.id;
+  }, []);
+
   // ========== 计算数据 ==========
   const currentMonth = useMemo(() => new Date().toISOString().slice(0, 7), []);
 
@@ -450,11 +633,12 @@ export function useFinance() {
     return cashAssets + availableCredit + debitCardBalance;
   }, [assets, assetTypes, creditCards, debitCards]);
 
-  // 总资产
+  // 总资产（包含投资账户）
   const totalAssets = useMemo(() =>
     assets.reduce((sum, a) => sum + a.amount, 0) +
-    debitCards.reduce((sum, c) => sum + c.balance, 0),
-  [assets, debitCards]);
+    debitCards.reduce((sum, c) => sum + c.balance, 0) +
+    investmentAccounts.reduce((sum, a) => sum + a.totalValue, 0),
+  [assets, debitCards, investmentAccounts]);
 
   // 总负债
   const totalLiabilities = useMemo(() =>
@@ -594,6 +778,8 @@ export function useFinance() {
     debitCardTypes,
     debitCards,
     savingsGoals,
+    companyEquities,
+    investmentAccounts,
     allAccounts,
     
     // 计算值
@@ -660,5 +846,21 @@ export function useFinance() {
     addSavingsGoal,
     updateSavingsGoal,
     deleteSavingsGoal,
+
+    // 公司股权操作
+    addCompanyEquity,
+    updateCompanyEquity,
+    deleteCompanyEquity,
+    addCompanyEquityMonthlyRecord,
+    deleteCompanyEquityMonthlyRecord,
+
+    // 投资账户操作
+    addInvestmentAccount,
+    updateInvestmentAccount,
+    deleteInvestmentAccount,
+    addInvestmentHolding,
+    updateInvestmentHolding,
+    deleteInvestmentHolding,
+    addInvestmentTransaction,
   };
 }

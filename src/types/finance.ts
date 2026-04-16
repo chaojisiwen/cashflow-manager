@@ -161,6 +161,88 @@ export interface DebitCard {
   notes?: string;
 }
 
+// ========== 公司股权管理 ==========
+
+// 公司股权月度记录
+export interface CompanyEquityMonthlyRecord {
+  id: string;
+  month: string; // 格式：YYYY-MM
+  revenue: number; // 营业额
+  netProfit: number; // 净利润
+  myDividend: number; // 实际分红金额
+  recordDate: string; // 记录日期
+  notes?: string;
+}
+
+// 公司股权
+export interface CompanyEquity {
+  id: string;
+  name: string; // 公司名称
+  myShareRatio: number; // 股份占比（如 30 表示 30%）
+  dividendDay: number; // 每月分红日期（1-31）
+  monthlyRecords: CompanyEquityMonthlyRecord[]; // 月度记录
+  notes?: string;
+}
+
+// ========== 投资账户（股票、基金等） ==========
+
+// 投资账户类型
+export type InvestmentAccountType = 'stock' | 'fund' | 'bond' | 'crypto' | 'forex' | 'other';
+
+export const InvestmentAccountTypeLabels: Record<InvestmentAccountType, string> = {
+  stock: '股票',
+  fund: '基金',
+  bond: '债券',
+  crypto: '加密货币',
+  forex: '外汇',
+  other: '其他',
+};
+
+// 投资持仓记录
+export interface InvestmentHolding {
+  id: string;
+  code: string; // 代码（如：000001.SZ）
+  name: string; // 名称（如：平安银行）
+  type: 'stock' | 'fund' | 'bond' | 'other';
+  quantity: number; // 持仓数量
+  avgCost: number; // 平均成本价
+  currentPrice: number; // 当前价格
+  marketValue: number; // 市值（自动计算）
+  profitLoss: number; // 盈亏金额（自动计算）
+  profitLossRate: number; // 盈亏率（自动计算）
+  purchaseDate?: string; // 买入日期
+  notes?: string;
+}
+
+// 投资交易记录
+export interface InvestmentTransaction {
+  id: string;
+  holdingId: string; // 关联持仓ID
+  type: 'buy' | 'sell';
+  date: string;
+  price: number;
+  quantity: number;
+  amount: number; // 交易金额
+  fee: number; // 手续费
+  notes?: string;
+}
+
+// 投资账户
+export interface InvestmentAccount {
+  id: string;
+  name: string;
+  type: InvestmentAccountType;
+  platform?: string; // 券商/平台名称（如：华泰证券、支付宝）
+  accountNumber?: string; // 账号（可选）
+  totalValue: number; // 总市值
+  cashBalance: number; // 现金余额
+  totalCost: number; // 总成本
+  totalProfitLoss: number; // 总盈亏
+  holdings: InvestmentHolding[]; // 持仓列表
+  transactions: InvestmentTransaction[]; // 交易记录
+  notes?: string;
+}
+
 // 还款提醒
 export interface PaymentReminder {
   id: string;

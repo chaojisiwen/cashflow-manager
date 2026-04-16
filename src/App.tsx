@@ -35,6 +35,8 @@ function App() {
     debitCardTypes,
     debitCards,
     savingsGoals,
+    companyEquities,
+    investmentAccounts,
     allAccounts,
     currentMonthIncome,
     currentMonthExpense,
@@ -72,6 +74,18 @@ function App() {
     addSavingsGoal,
     updateSavingsGoal,
     deleteSavingsGoal,
+    addCompanyEquity,
+    updateCompanyEquity,
+    deleteCompanyEquity,
+    addCompanyEquityMonthlyRecord,
+    deleteCompanyEquityMonthlyRecord,
+    addInvestmentAccount,
+    updateInvestmentAccount,
+    deleteInvestmentAccount,
+    addInvestmentHolding,
+    updateInvestmentHolding,
+    deleteInvestmentHolding,
+    addInvestmentTransaction,
   } = useFinance();
 
   const navItems = [
@@ -132,6 +146,8 @@ function App() {
             creditCards={creditCards}
             debitCardTypes={debitCardTypes}
             debitCards={debitCards}
+            companyEquities={companyEquities}
+            investmentAccounts={investmentAccounts}
             totalAssets={totalAssets}
             totalLiabilities={totalLiabilities}
             netWorth={netWorth}
@@ -155,6 +171,18 @@ function App() {
             onAddDebitCard={addDebitCard}
             onUpdateDebitCard={() => {}}
             onDeleteDebitCard={deleteDebitCard}
+            onAddCompanyEquity={addCompanyEquity}
+            onUpdateCompanyEquity={updateCompanyEquity}
+            onDeleteCompanyEquity={deleteCompanyEquity}
+            onAddCompanyEquityMonthlyRecord={addCompanyEquityMonthlyRecord}
+            onDeleteCompanyEquityMonthlyRecord={deleteCompanyEquityMonthlyRecord}
+            onAddInvestmentAccount={addInvestmentAccount}
+            onUpdateInvestmentAccount={updateInvestmentAccount}
+            onDeleteInvestmentAccount={deleteInvestmentAccount}
+            onAddInvestmentHolding={addInvestmentHolding}
+            onUpdateInvestmentHolding={updateInvestmentHolding}
+            onDeleteInvestmentHolding={deleteInvestmentHolding}
+            onAddInvestmentTransaction={addInvestmentTransaction}
           />
         );
       case 'goals':
