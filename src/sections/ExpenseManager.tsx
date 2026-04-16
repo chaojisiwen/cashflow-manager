@@ -10,18 +10,26 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { 
   Plus, Trash2, Home, CreditCard, Car, Utensils, Gamepad2, 
-  ShoppingBag, Lightbulb, Heart, BookOpen, Shield, MoreHorizontal 
+  ShoppingBag, Lightbulb, Heart, BookOpen, Shield, MoreHorizontal,
+  Wallet
 } from 'lucide-react';
 import type { Expense, ExpenseType } from '@/types/finance';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
-  Home, CreditCard, Car, Utensils, Gamepad2, ShoppingBag, Lightbulb, Heart, BookOpen, Shield, MoreHorizontal,
+  Home, CreditCard, Car, Utensils, Gamepad2, ShoppingBag, Lightbulb, Heart, BookOpen, Shield, MoreHorizontal, Wallet,
 };
+
+interface Account {
+  id: string;
+  name: string;
+  type: 'credit_card' | 'debit_card';
+}
 
 interface ExpenseManagerProps {
   expenseTypes: ExpenseType[];
   expenses: Expense[];
   currentMonthIncome: number;
+  allAccounts: Account[];
   onAddExpense: (expense: Omit<Expense, 'id'>) => void;
   onDeleteExpense: (id: string) => void;
   onAddExpenseType: (type: Omit<ExpenseType, 'id'>) => void;
@@ -35,6 +43,7 @@ export function ExpenseManager({
   expenseTypes,
   expenses,
   currentMonthIncome,
+  allAccounts,
   onAddExpense,
   onDeleteExpense,
   onAddExpenseType,
@@ -48,6 +57,7 @@ export function ExpenseManager({
     date: new Date().toISOString().slice(0, 10),
     description: '',
     isFixed: false,
+    accountId: '',
   });
 
   const [typeFormData, setTypeFormData] = useState({
@@ -66,6 +76,7 @@ export function ExpenseManager({
       date: formData.date,
       description: formData.description,
       isFixed: formData.isFixed,
+      accountId: formData.accountId || undefined,
     });
     
     setFormData({
@@ -74,6 +85,7 @@ export function ExpenseManager({
       date: new Date().toISOString().slice(0, 10),
       description: '',
       isFixed: false,
+      accountId: '',
     });
     setIsAddDialogOpen(false);
   };
@@ -109,6 +121,13 @@ export function ExpenseManager({
   // 固定支出
   const fixedExpenses = currentMonthExpenses.filter(e => e.isFixed);
   const fixedTotal = fixedExpenses.reduce((sum, e) => sum + e.amount, 0);
+
+  // 获取账户名称
+  const getAccountName = (accountId?: string) => {
+    if (!accountId) return null;
+    const account = allAccounts.find(a => a.id === accountId);
+    return account?.name || null;
+  };
 
   return (
     <div className="space-y-6">
@@ -292,6 +311,26 @@ export function ExpenseManager({
                     />
                   </div>
                   <div className="space-y-2">
+                    <Label>支出来源</Label>
+                    <Select 
+                      value={formData.accountId} 
+                      onValueChange={v => setFormData({ ...formData, accountId: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="选择支付账户" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">未指定</SelectItem>
+                        {allAccounts.map(account => (
+                          <SelectItem key={account.id} value={account.id}>
+                            {account.type === 'credit_card' ? '💳 ' : '💳 '}
+                            {account.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
                     <Label>日期</Label>
                     <Input 
                       type="date"
@@ -329,6 +368,7 @@ export function ExpenseManager({
               <TableRow>
                 <TableHead>类型</TableHead>
                 <TableHead>金额</TableHead>
+                <TableHead>来源</TableHead>
                 <TableHead>日期</TableHead>
                 <TableHead>备注</TableHead>
                 <TableHead className="w-[100px]">操作</TableHead>
@@ -337,7 +377,7 @@ export function ExpenseManager({
             <TableBody>
               {expenses.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                     暂无支出记录，点击"记支出"添加
                   </TableCell>
                 </TableRow>
@@ -345,6 +385,7 @@ export function ExpenseManager({
                 [...expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(expense => {
                   const type = expenseTypes.find(t => t.id === expense.typeId);
                   const Icon = type?.icon ? iconMap[type.icon] || ShoppingBag : ShoppingBag;
+                  const accountName = getAccountName(expense.accountId);
                   return (
                     <TableRow key={expense.id}>
                       <TableCell>
@@ -361,6 +402,16 @@ export function ExpenseManager({
                         </div>
                       </TableCell>
                       <TableCell className="font-medium text-rose-600">{formatMoney(expense.amount)}</TableCell>
+                      <TableCell>
+                        {accountName ? (
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <Wallet className="w-3 h-3" />
+                            {accountName}
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
                       <TableCell>{expense.date}</TableCell>
                       <TableCell className="text-muted-foreground">{expense.description || '-'}</TableCell>
                       <TableCell>

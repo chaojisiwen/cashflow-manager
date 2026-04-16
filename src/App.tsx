@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 function App() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('expense');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   const {
@@ -26,10 +26,16 @@ function App() {
     incomes,
     expenseTypes,
     expenses,
+    assetTypes,
     assets,
+    loanTypes,
     liabilities,
+    creditCardTypes,
     creditCards,
+    debitCardTypes,
+    debitCards,
     savingsGoals,
+    allAccounts,
     currentMonthIncome,
     currentMonthExpense,
     disposableAmount,
@@ -46,13 +52,23 @@ function App() {
     deleteExpense,
     addExpenseType,
     deleteExpenseType: _deleteExpenseType,
+    addAssetType,
+    deleteAssetType,
     addAsset,
     deleteAsset,
+    addLoanType,
+    deleteLoanType,
     addLiability,
     deleteLiability,
+    addCreditCardType,
+    deleteCreditCardType,
     addCreditCard,
     updateCreditCard,
     deleteCreditCard,
+    addDebitCardType,
+    deleteDebitCardType,
+    addDebitCard,
+    deleteDebitCard,
     addSavingsGoal,
     updateSavingsGoal,
     deleteSavingsGoal,
@@ -99,6 +115,7 @@ function App() {
             expenseTypes={expenseTypes}
             expenses={expenses}
             currentMonthIncome={currentMonthIncome}
+            allAccounts={allAccounts}
             onAddExpense={addExpense}
             onDeleteExpense={deleteExpense}
             onAddExpenseType={addExpenseType}
@@ -107,21 +124,37 @@ function App() {
       case 'assets':
         return (
           <AssetsLiabilities
+            assetTypes={assetTypes}
             assets={assets}
+            loanTypes={loanTypes}
             liabilities={liabilities}
+            creditCardTypes={creditCardTypes}
             creditCards={creditCards}
+            debitCardTypes={debitCardTypes}
+            debitCards={debitCards}
             totalAssets={totalAssets}
             totalLiabilities={totalLiabilities}
             netWorth={netWorth}
+            onAddAssetType={addAssetType}
+            onDeleteAssetType={deleteAssetType}
             onAddAsset={addAsset}
             onUpdateAsset={() => {}}
             onDeleteAsset={deleteAsset}
+            onAddLoanType={addLoanType}
+            onDeleteLoanType={deleteLoanType}
             onAddLiability={addLiability}
             onUpdateLiability={() => {}}
             onDeleteLiability={deleteLiability}
+            onAddCreditCardType={addCreditCardType}
+            onDeleteCreditCardType={deleteCreditCardType}
             onAddCreditCard={addCreditCard}
             onUpdateCreditCard={updateCreditCard}
             onDeleteCreditCard={deleteCreditCard}
+            onAddDebitCardType={addDebitCardType}
+            onDeleteDebitCardType={deleteDebitCardType}
+            onAddDebitCard={addDebitCard}
+            onUpdateDebitCard={() => {}}
+            onDeleteDebitCard={deleteDebitCard}
           />
         );
       case 'goals':

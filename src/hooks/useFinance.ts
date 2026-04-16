@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import type {
   Income, IncomeType, Expense, ExpenseType,
-  Asset, Liability, CreditCard, SavingsGoal,
-  PaymentReminder, FinancialAnalysis
+  Asset, AssetType, Liability, LoanType, CreditCard, CreditCardType,
+  DebitCard, DebitCardType, SavingsGoal, PaymentReminder, FinancialAnalysis,
+  RepaymentMethod
 } from '@/types/finance';
 
 // 本地存储键名
@@ -11,9 +12,14 @@ const STORAGE_KEYS = {
   incomes: 'cf_incomes',
   expenseTypes: 'cf_expense_types',
   expenses: 'cf_expenses',
+  assetTypes: 'cf_asset_types',
   assets: 'cf_assets',
+  loanTypes: 'cf_loan_types',
   liabilities: 'cf_liabilities',
+  creditCardTypes: 'cf_credit_card_types',
   creditCards: 'cf_credit_cards',
+  debitCardTypes: 'cf_debit_card_types',
+  debitCards: 'cf_debit_cards',
   savingsGoals: 'cf_savings_goals',
 };
 
@@ -43,6 +49,105 @@ const defaultExpenseTypes: ExpenseType[] = [
   { id: 'insurance', name: '保险', icon: 'Shield', color: '#6366f1', isDefault: true },
   { id: 'misc', name: '杂项', icon: 'MoreHorizontal', color: '#6b7280', isDefault: true },
 ];
+
+// 默认资产类型
+const defaultAssetTypes: AssetType[] = [
+  { id: 'cash', name: '现金', icon: 'Banknote', color: '#10b981', isDefault: true },
+  { id: 'stock', name: '股票', icon: 'TrendingUp', color: '#3b82f6', isDefault: true },
+  { id: 'fund', name: '基金', icon: 'BarChart3', color: '#8b5cf6', isDefault: true },
+  { id: 'bond', name: '债券', icon: 'FileText', color: '#f59e0b', isDefault: true },
+  { id: 'property', name: '房产', icon: 'Home', color: '#06b6d4', isDefault: true },
+  { id: 'crypto', name: '加密货币', icon: 'Bitcoin', color: '#f97316', isDefault: true },
+  { id: 'other', name: '其他', icon: 'MoreHorizontal', color: '#6b7280', isDefault: true },
+];
+
+// 默认贷款类型
+const defaultLoanTypes: LoanType[] = [
+  { id: 'personal', name: '个人贷款', icon: 'User', color: '#3b82f6', isDefault: true },
+  { id: 'mortgage', name: '房贷', icon: 'Home', color: '#10b981', isDefault: true },
+  { id: 'car', name: '车贷', icon: 'Car', color: '#f59e0b', isDefault: true },
+  { id: 'education', name: '助学贷款', icon: 'BookOpen', color: '#8b5cf6', isDefault: true },
+  { id: 'business', name: '经营贷款', icon: 'Briefcase', color: '#ec4899', isDefault: true },
+  { id: 'other', name: '其他贷款', icon: 'MoreHorizontal', color: '#6b7280', isDefault: true },
+];
+
+// 默认信用卡类型
+const defaultCreditCardTypes: CreditCardType[] = [
+  { id: 'visa', name: 'Visa', icon: 'CreditCard', color: '#1a1f71', isDefault: true },
+  { id: 'mastercard', name: 'Mastercard', icon: 'CreditCard', color: '#eb001b', isDefault: true },
+  { id: 'amex', name: 'American Express', icon: 'CreditCard', color: '#016fd0', isDefault: true },
+  { id: 'unionpay', name: '银联', icon: 'CreditCard', color: '#c00', isDefault: true },
+  { id: 'other', name: '其他', icon: 'CreditCard', color: '#6b7280', isDefault: true },
+];
+
+// 默认储蓄卡类型
+const defaultDebitCardTypes: DebitCardType[] = [
+  { id: 'checking', name: '借记卡', icon: 'Wallet', color: '#10b981', isDefault: true },
+  { id: 'savings', name: '储蓄卡', icon: 'PiggyBank', color: '#3b82f6', isDefault: true },
+  { id: 'other', name: '其他', icon: 'MoreHorizontal', color: '#6b7280', isDefault: true },
+];
+
+// 贷款期限选项（月）
+export const LOAN_TERMS = [3, 6, 12, 24, 36, 48, 60, 72, 84, 96, 120];
+
+// 计算贷款月供
+export function calculateLoanPayment(
+  principal: number,
+  annualRate: number,
+  months: number,
+  method: RepaymentMethod
+): { monthlyPayment: number; firstMonthPayment?: number; totalInterest: number } {
+  const monthlyRate = annualRate / 100 / 12;
+
+  switch (method) {
+    case 'interest_only': {
+      // 先息后本：每月只还利息，到期还本金
+      const monthlyInterest = principal * monthlyRate;
+      const totalInterest = monthlyInterest * months;
+      return {
+        monthlyPayment: monthlyInterest,
+        totalInterest,
+      };
+    }
+
+    case 'equal_principal_interest': {
+      // 等额本息：每月还款额固定
+      // 月供 = 本金 × 月利率 × (1+月利率)^还款月数 / [(1+月利率)^还款月数 - 1]
+      if (monthlyRate === 0) {
+        const monthlyPayment = principal / months;
+        return { monthlyPayment, totalInterest: 0 };
+      }
+      const pow = Math.pow(1 + monthlyRate, months);
+      const monthlyPayment = principal * monthlyRate * pow / (pow - 1);
+      const totalInterest = monthlyPayment * months - principal;
+      return {
+        monthlyPayment: Math.round(monthlyPayment * 100) / 100,
+        totalInterest: Math.round(totalInterest * 100) / 100,
+      };
+    }
+
+    case 'equal_principal': {
+      // 等额本金：每月还固定本金+递减利息
+      // 首月还款 = 本金/期数 + 本金×月利率
+      // 每月递减 = 本金/期数 × 月利率
+      const principalPerMonth = principal / months;
+      const firstMonthInterest = principal * monthlyRate;
+      const firstMonthPayment = principalPerMonth + firstMonthInterest;
+      
+      // 总利息 = (期数 + 1) × 本金 × 月利率 / 2
+      const totalInterest = (months + 1) * principal * monthlyRate / 2;
+      
+      return {
+        monthlyPayment: Math.round(principalPerMonth * 100) / 100, // 平均月供（用于显示）
+        firstMonthPayment: Math.round(firstMonthPayment * 100) / 100,
+        totalInterest: Math.round(totalInterest * 100) / 100,
+      };
+    }
+
+    default:
+      return { monthlyPayment: 0, totalInterest: 0 };
+  }
+}
 
 // 从本地存储加载数据
 function loadFromStorage<T>(key: string, defaultValue: T): T {
@@ -84,19 +189,44 @@ export function useFinance() {
     loadFromStorage(STORAGE_KEYS.expenses, [])
   );
 
+  // 资产类型
+  const [assetTypes, setAssetTypes] = useState<AssetType[]>(() =>
+    loadFromStorage(STORAGE_KEYS.assetTypes, defaultAssetTypes)
+  );
+
   // 资产
   const [assets, setAssets] = useState<Asset[]>(() =>
     loadFromStorage(STORAGE_KEYS.assets, [])
   );
 
-  // 负债
+  // 贷款类型
+  const [loanTypes, setLoanTypes] = useState<LoanType[]>(() =>
+    loadFromStorage(STORAGE_KEYS.loanTypes, defaultLoanTypes)
+  );
+
+  // 负债（贷款）
   const [liabilities, setLiabilities] = useState<Liability[]>(() =>
     loadFromStorage(STORAGE_KEYS.liabilities, [])
+  );
+
+  // 信用卡类型
+  const [creditCardTypes, setCreditCardTypes] = useState<CreditCardType[]>(() =>
+    loadFromStorage(STORAGE_KEYS.creditCardTypes, defaultCreditCardTypes)
   );
 
   // 信用卡
   const [creditCards, setCreditCards] = useState<CreditCard[]>(() =>
     loadFromStorage(STORAGE_KEYS.creditCards, [])
+  );
+
+  // 储蓄卡类型
+  const [debitCardTypes, setDebitCardTypes] = useState<DebitCardType[]>(() =>
+    loadFromStorage(STORAGE_KEYS.debitCardTypes, defaultDebitCardTypes)
+  );
+
+  // 储蓄卡
+  const [debitCards, setDebitCards] = useState<DebitCard[]>(() =>
+    loadFromStorage(STORAGE_KEYS.debitCards, [])
   );
 
   // 储蓄目标
@@ -109,9 +239,14 @@ export function useFinance() {
   useEffect(() => saveToStorage(STORAGE_KEYS.incomes, incomes), [incomes]);
   useEffect(() => saveToStorage(STORAGE_KEYS.expenseTypes, expenseTypes), [expenseTypes]);
   useEffect(() => saveToStorage(STORAGE_KEYS.expenses, expenses), [expenses]);
+  useEffect(() => saveToStorage(STORAGE_KEYS.assetTypes, assetTypes), [assetTypes]);
   useEffect(() => saveToStorage(STORAGE_KEYS.assets, assets), [assets]);
+  useEffect(() => saveToStorage(STORAGE_KEYS.loanTypes, loanTypes), [loanTypes]);
   useEffect(() => saveToStorage(STORAGE_KEYS.liabilities, liabilities), [liabilities]);
+  useEffect(() => saveToStorage(STORAGE_KEYS.creditCardTypes, creditCardTypes), [creditCardTypes]);
   useEffect(() => saveToStorage(STORAGE_KEYS.creditCards, creditCards), [creditCards]);
+  useEffect(() => saveToStorage(STORAGE_KEYS.debitCardTypes, debitCardTypes), [debitCardTypes]);
+  useEffect(() => saveToStorage(STORAGE_KEYS.debitCards, debitCards), [debitCards]);
   useEffect(() => saveToStorage(STORAGE_KEYS.savingsGoals, savingsGoals), [savingsGoals]);
 
   // ========== 收入管理 ==========
@@ -164,6 +299,17 @@ export function useFinance() {
     setExpenseTypes(prev => prev.filter(t => t.id !== id && !t.isDefault));
   }, []);
 
+  // ========== 资产类型管理 ==========
+  const addAssetType = useCallback((type: Omit<AssetType, 'id'>) => {
+    const newType: AssetType = { ...type, id: Date.now().toString() };
+    setAssetTypes(prev => [...prev, newType]);
+    return newType.id;
+  }, []);
+
+  const deleteAssetType = useCallback((id: string) => {
+    setAssetTypes(prev => prev.filter(t => t.id !== id && !t.isDefault));
+  }, []);
+
   // ========== 资产管理 ==========
   const addAsset = useCallback((asset: Omit<Asset, 'id'>) => {
     const newAsset: Asset = { ...asset, id: Date.now().toString() };
@@ -179,7 +325,18 @@ export function useFinance() {
     setAssets(prev => prev.filter(a => a.id !== id));
   }, []);
 
-  // ========== 负债管理 ==========
+  // ========== 贷款类型管理 ==========
+  const addLoanType = useCallback((type: Omit<LoanType, 'id'>) => {
+    const newType: LoanType = { ...type, id: Date.now().toString() };
+    setLoanTypes(prev => [...prev, newType]);
+    return newType.id;
+  }, []);
+
+  const deleteLoanType = useCallback((id: string) => {
+    setLoanTypes(prev => prev.filter(t => t.id !== id && !t.isDefault));
+  }, []);
+
+  // ========== 负债（贷款）管理 ==========
   const addLiability = useCallback((liability: Omit<Liability, 'id'>) => {
     const newLiability: Liability = { ...liability, id: Date.now().toString() };
     setLiabilities(prev => [...prev, newLiability]);
@@ -192,6 +349,17 @@ export function useFinance() {
 
   const deleteLiability = useCallback((id: string) => {
     setLiabilities(prev => prev.filter(l => l.id !== id));
+  }, []);
+
+  // ========== 信用卡类型管理 ==========
+  const addCreditCardType = useCallback((type: Omit<CreditCardType, 'id'>) => {
+    const newType: CreditCardType = { ...type, id: Date.now().toString() };
+    setCreditCardTypes(prev => [...prev, newType]);
+    return newType.id;
+  }, []);
+
+  const deleteCreditCardType = useCallback((id: string) => {
+    setCreditCardTypes(prev => prev.filter(t => t.id !== id && !t.isDefault));
   }, []);
 
   // ========== 信用卡管理 ==========
@@ -207,6 +375,32 @@ export function useFinance() {
 
   const deleteCreditCard = useCallback((id: string) => {
     setCreditCards(prev => prev.filter(c => c.id !== id));
+  }, []);
+
+  // ========== 储蓄卡类型管理 ==========
+  const addDebitCardType = useCallback((type: Omit<DebitCardType, 'id'>) => {
+    const newType: DebitCardType = { ...type, id: Date.now().toString() };
+    setDebitCardTypes(prev => [...prev, newType]);
+    return newType.id;
+  }, []);
+
+  const deleteDebitCardType = useCallback((id: string) => {
+    setDebitCardTypes(prev => prev.filter(t => t.id !== id && !t.isDefault));
+  }, []);
+
+  // ========== 储蓄卡管理 ==========
+  const addDebitCard = useCallback((card: Omit<DebitCard, 'id'>) => {
+    const newCard: DebitCard = { ...card, id: Date.now().toString() };
+    setDebitCards(prev => [...prev, newCard]);
+    return newCard.id;
+  }, []);
+
+  const updateDebitCard = useCallback((id: string, updates: Partial<DebitCard>) => {
+    setDebitCards(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+  }, []);
+
+  const deleteDebitCard = useCallback((id: string) => {
+    setDebitCards(prev => prev.filter(c => c.id !== id));
   }, []);
 
   // ========== 储蓄目标管理 ==========
@@ -241,20 +435,26 @@ export function useFinance() {
       .reduce((sum, e) => sum + e.amount, 0);
   }, [expenses, currentMonth]);
 
-  // 可支配收入 = 现金 + 信用卡可用额度
+  // 可支配收入 = 现金 + 信用卡可用额度 + 储蓄卡余额
   const disposableAmount = useMemo(() => {
     const cashAssets = assets
-      .filter(a => a.type === 'cash')
+      .filter(a => {
+        const type = assetTypes.find(t => t.id === a.typeId);
+        return type?.id === 'cash';
+      })
       .reduce((sum, a) => sum + a.amount, 0);
     const availableCredit = creditCards
       .reduce((sum, c) => sum + (c.limit - c.usedAmount), 0);
-    return cashAssets + availableCredit;
-  }, [assets, creditCards]);
+    const debitCardBalance = debitCards
+      .reduce((sum, c) => sum + c.balance, 0);
+    return cashAssets + availableCredit + debitCardBalance;
+  }, [assets, assetTypes, creditCards, debitCards]);
 
   // 总资产
   const totalAssets = useMemo(() =>
-    assets.reduce((sum, a) => sum + a.amount, 0),
-  [assets]);
+    assets.reduce((sum, a) => sum + a.amount, 0) +
+    debitCards.reduce((sum, c) => sum + c.balance, 0),
+  [assets, debitCards]);
 
   // 总负债
   const totalLiabilities = useMemo(() =>
@@ -370,16 +570,31 @@ export function useFinance() {
     };
   }, [incomes, expenses, totalAssets, totalLiabilities, netWorth]);
 
+  // 获取所有账户（用于支出来源选择）
+  const allAccounts = useMemo(() => {
+    const accounts = [
+      ...creditCards.map(c => ({ id: c.id, name: `${c.bank} ${c.name}`, type: 'credit_card' as const })),
+      ...debitCards.map(c => ({ id: c.id, name: `${c.bank} ${c.name}`, type: 'debit_card' as const })),
+    ];
+    return accounts;
+  }, [creditCards, debitCards]);
+
   return {
     // 数据
     incomeTypes,
     incomes,
     expenseTypes,
     expenses,
+    assetTypes,
     assets,
+    loanTypes,
     liabilities,
+    creditCardTypes,
     creditCards,
+    debitCardTypes,
+    debitCards,
     savingsGoals,
+    allAccounts,
     
     // 计算值
     currentMonthIncome,
@@ -405,20 +620,41 @@ export function useFinance() {
     addExpenseType,
     deleteExpenseType,
     
+    // 资产类型操作
+    addAssetType,
+    deleteAssetType,
+    
     // 资产操作
     addAsset,
     updateAsset,
     deleteAsset,
     
-    // 负债操作
+    // 贷款类型操作
+    addLoanType,
+    deleteLoanType,
+    
+    // 负债（贷款）操作
     addLiability,
     updateLiability,
     deleteLiability,
+    
+    // 信用卡类型操作
+    addCreditCardType,
+    deleteCreditCardType,
     
     // 信用卡操作
     addCreditCard,
     updateCreditCard,
     deleteCreditCard,
+    
+    // 储蓄卡类型操作
+    addDebitCardType,
+    deleteDebitCardType,
+    
+    // 储蓄卡操作
+    addDebitCard,
+    updateDebitCard,
+    deleteDebitCard,
     
     // 储蓄目标操作
     addSavingsGoal,
