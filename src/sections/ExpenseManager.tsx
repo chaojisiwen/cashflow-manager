@@ -161,7 +161,7 @@ export function ExpenseManager({
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">剩余预算</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">本月结余</CardTitle>
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${currentMonthIncome - totalExpense < 0 ? 'text-red-500' : 'text-emerald-600'}`}>
