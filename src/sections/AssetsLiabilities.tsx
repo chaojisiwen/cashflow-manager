@@ -1181,11 +1181,10 @@ export function AssetsLiabilities({
                             <AccordionContent>
                               <div className="space-y-3">
                                 {/* 添加新记录 */}
-                                <div className="grid grid-cols-2 gap-2 p-3 bg-slate-50 rounded-lg">
+                                <div className="space-y-2 p-3 bg-slate-50 rounded-lg">
                                   <Input 
                                     type="month" 
                                     placeholder="月份"
-                                    className="min-w-0"
                                     value={newMonthlyRecord[equity.id]?.month || ''}
                                     onChange={e => setNewMonthlyRecord(prev => ({
                                       ...prev,
@@ -1195,7 +1194,6 @@ export function AssetsLiabilities({
                                   <Input 
                                     type="number" 
                                     placeholder="营业额"
-                                    className="min-w-0"
                                     value={newMonthlyRecord[equity.id]?.revenue || ''}
                                     onChange={e => setNewMonthlyRecord(prev => ({
                                       ...prev,
@@ -1205,7 +1203,6 @@ export function AssetsLiabilities({
                                   <Input 
                                     type="number" 
                                     placeholder="净利润"
-                                    className="min-w-0"
                                     value={newMonthlyRecord[equity.id]?.netProfit || ''}
                                     onChange={e => setNewMonthlyRecord(prev => ({
                                       ...prev,
@@ -1216,7 +1213,7 @@ export function AssetsLiabilities({
                                     <Input 
                                       type="number" 
                                       placeholder="分红金额"
-                                      className="min-w-0"
+                                      className="flex-1"
                                       value={newMonthlyRecord[equity.id]?.myDividend || ''}
                                       onChange={e => setNewMonthlyRecord(prev => ({
                                         ...prev,
