@@ -32,3 +32,6 @@ lerna-debug.log*
 .env
 .env.local
 .env.*.local
+
+# Deploy scripts (contain sensitive config)
+deploy-cos.cjs
