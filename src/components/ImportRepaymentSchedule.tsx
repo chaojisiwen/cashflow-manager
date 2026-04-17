@@ -12,8 +12,8 @@ interface ImportRepaymentScheduleProps {
   onImport: (liabilityId: string, schedules: LoanRepaymentSchedule[]) => void;
 }
 
-// OCR API 地址（部署后替换为实际的云函数地址）
-const OCR_API_URL = 'https://service-xxx.gz.apigw.tencentcs.com/release/ocr-parser';
+// OCR API 地址（腾讯云云函数 URL）
+const OCR_API_URL = 'https://1418254508-5upolvmk61.ap-hongkong.tencentscf.com';
 
 export function ImportRepaymentSchedule({ liabilities, onImport }: ImportRepaymentScheduleProps) {
   const [isOpen, setIsOpen] = useState(false);
