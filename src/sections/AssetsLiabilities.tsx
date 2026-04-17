@@ -1181,10 +1181,11 @@ export function AssetsLiabilities({
                             <AccordionContent>
                               <div className="space-y-3">
                                 {/* 添加新记录 */}
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 bg-slate-50 rounded-lg">
+                                <div className="grid grid-cols-2 gap-2 p-3 bg-slate-50 rounded-lg">
                                   <Input 
                                     type="month" 
                                     placeholder="月份"
+                                    className="min-w-0"
                                     value={newMonthlyRecord[equity.id]?.month || ''}
                                     onChange={e => setNewMonthlyRecord(prev => ({
                                       ...prev,
@@ -1194,6 +1195,7 @@ export function AssetsLiabilities({
                                   <Input 
                                     type="number" 
                                     placeholder="营业额"
+                                    className="min-w-0"
                                     value={newMonthlyRecord[equity.id]?.revenue || ''}
                                     onChange={e => setNewMonthlyRecord(prev => ({
                                       ...prev,
@@ -1203,6 +1205,7 @@ export function AssetsLiabilities({
                                   <Input 
                                     type="number" 
                                     placeholder="净利润"
+                                    className="min-w-0"
                                     value={newMonthlyRecord[equity.id]?.netProfit || ''}
                                     onChange={e => setNewMonthlyRecord(prev => ({
                                       ...prev,
@@ -1213,6 +1216,7 @@ export function AssetsLiabilities({
                                     <Input 
                                       type="number" 
                                       placeholder="分红金额"
+                                      className="min-w-0"
                                       value={newMonthlyRecord[equity.id]?.myDividend || ''}
                                       onChange={e => setNewMonthlyRecord(prev => ({
                                         ...prev,
@@ -1225,13 +1229,13 @@ export function AssetsLiabilities({
 
                                 {/* 历史记录 */}
                                 {equity.monthlyRecords.slice().reverse().map(record => (
-                                  <div key={record.id} className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 p-3 border rounded-lg text-sm">
-                                    <div>{record.month}</div>
-                                    <div>¥{record.revenue.toLocaleString()}</div>
-                                    <div>¥{record.netProfit.toLocaleString()}</div>
-                                    <div className="flex justify-between items-center">
-                                      <span className="text-emerald-600">¥{record.myDividend.toLocaleString()}</span>
-                                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onDeleteCompanyEquityMonthlyRecord(equity.id, record.id)}>
+                                  <div key={record.id} className="grid grid-cols-2 gap-2 p-3 border rounded-lg text-sm">
+                                    <div className="truncate">{record.month}</div>
+                                    <div className="truncate">¥{record.revenue.toLocaleString()}</div>
+                                    <div className="truncate">¥{record.netProfit.toLocaleString()}</div>
+                                    <div className="flex justify-between items-center gap-2">
+                                      <span className="text-emerald-600 truncate">¥{record.myDividend.toLocaleString()}</span>
+                                      <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => onDeleteCompanyEquityMonthlyRecord(equity.id, record.id)}>
                                         <Trash2 className="w-3 h-3 text-red-500" />
                                       </Button>
                                     </div>
