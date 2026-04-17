@@ -24,6 +24,14 @@ export function ImportRepaymentSchedule({ liabilities, onImport }: ImportRepayme
   const [rawText, setRawText] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const handleOpen = () => {
+    if (liabilities.length === 0) {
+      alert('请先添加至少一个贷款，再导入还款计划');
+      return;
+    }
+    setIsOpen(true);
+  };
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -143,7 +151,7 @@ export function ImportRepaymentSchedule({ liabilities, onImport }: ImportRepayme
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={() => setIsOpen(true)}>
+      <Button variant="outline" size="sm" onClick={handleOpen}>
         <Camera className="w-4 h-4 mr-1" />
         导入还款计划
       </Button>
