@@ -12,7 +12,7 @@ import {
   Wallet, TrendingUp, TrendingDown, Building2, CreditCard as CreditCardIcon, 
   Plus, Trash2, Landmark, PiggyBank, Briefcase, BarChart3,
   TrendingUp as StockIcon, Bitcoin, DollarSign,
-  Calendar, Percent, Coins, Camera
+  Calendar, Percent, Coins
 } from 'lucide-react';
 import { ImportRepaymentSchedule } from '@/components/ImportRepaymentSchedule';
 import type { 
@@ -116,6 +116,7 @@ export function AssetsLiabilities({
   onAddLoanType,
   onDeleteLoanType: _onDeleteLoanType,
   onAddLiability,
+  onUpdateLiability,
   onDeleteLiability,
   onAddCreditCardType,
   onDeleteCreditCardType: _onDeleteCreditCardType,
@@ -743,6 +744,7 @@ export function AssetsLiabilities({
                 </div>
               </DialogContent>
             </Dialog>
+          </div>
           </div>
 
           {/* 自定义类型 */}
