@@ -76,7 +76,7 @@ export function ExpenseManager({
       date: formData.date,
       description: formData.description,
       isFixed: formData.isFixed,
-      accountId: formData.accountId || undefined,
+      accountId: formData.accountId && formData.accountId !== 'none' ? formData.accountId : undefined,
     });
     
     setFormData({
@@ -320,7 +320,7 @@ export function ExpenseManager({
                         <SelectValue placeholder="选择支付账户" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">未指定</SelectItem>
+                        <SelectItem value="none">未指定</SelectItem>
                         {allAccounts.map(account => (
                           <SelectItem key={account.id} value={account.id}>
                             {account.type === 'credit_card' ? '💳 ' : '💳 '}
