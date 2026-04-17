@@ -99,6 +99,19 @@ export interface LoanType {
   isDefault?: boolean;
 }
 
+// 贷款还款计划明细
+export interface LoanRepaymentSchedule {
+  id: string;
+  period: number; // 期数（第几期）
+  dueDate: string; // 还款日期（YYYY-MM-DD）
+  totalAmount: number; // 月供总额
+  principal: number; // 本金部分
+  interest: number; // 利息部分
+  remainingPrincipal: number; // 剩余本金
+  isPaid: boolean; // 是否已还
+  paidDate?: string; // 实际还款日期
+}
+
 // 负债
 export interface Liability {
   id: string;
@@ -115,6 +128,7 @@ export interface Liability {
   startDate: string;
   endDate?: string;
   notes?: string;
+  repaymentSchedule?: LoanRepaymentSchedule[]; // 还款计划明细（从截图导入）
 }
 
 // 信用卡类型

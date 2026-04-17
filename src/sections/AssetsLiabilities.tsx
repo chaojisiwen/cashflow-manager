@@ -12,13 +12,14 @@ import {
   Wallet, TrendingUp, TrendingDown, Building2, CreditCard as CreditCardIcon, 
   Plus, Trash2, Landmark, PiggyBank, Briefcase, BarChart3,
   TrendingUp as StockIcon, Bitcoin, DollarSign,
-  Calendar, Percent, Coins
+  Calendar, Percent, Coins, Camera
 } from 'lucide-react';
+import { ImportRepaymentSchedule } from '@/components/ImportRepaymentSchedule';
 import type { 
   Asset, AssetType, Liability, LoanType, 
   CreditCard, CreditCardType, DebitCard, DebitCardType,
   RepaymentMethod, CompanyEquity, InvestmentAccount, InvestmentHolding,
-  InvestmentAccountType
+  InvestmentAccountType, LoanRepaymentSchedule
 } from '@/types/finance';
 import { InvestmentAccountTypeLabels } from '@/types/finance';
 import { LOAN_TERMS } from '@/hooks/useFinance';
@@ -229,6 +230,18 @@ export function AssetsLiabilities({
       name: '', typeId: '', totalAmount: '', remainingAmount: '', interestRate: '',
       repaymentMethod: 'equal_principal_interest', loanTerm: '12', monthlyPayment: '',
       dueDate: '1', startDate: '', notes: ''
+    });
+  };
+
+  // 处理导入还款计划
+  const handleImportRepaymentSchedule = (liabilityId: string, schedules: LoanRepaymentSchedule[]) => {
+    const liability = liabilities.find(l => l.id === liabilityId);
+    if (!liability) return;
+    
+    // 更新贷款，添加还款计划
+    onUpdateLiability(liabilityId, {
+      ...liability,
+      repaymentSchedule: schedules,
     });
   };
 
@@ -629,7 +642,12 @@ export function AssetsLiabilities({
         <TabsContent value="liabilities" className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">贷款管理</h3>
-            <Dialog>
+            <div className="flex gap-2">
+              <ImportRepaymentSchedule 
+                liabilities={liabilities} 
+                onImport={handleImportRepaymentSchedule} 
+              />
+              <Dialog>
               <DialogTrigger asChild>
                 <Button size="sm"><Plus className="w-4 h-4 mr-1" />添加贷款</Button>
               </DialogTrigger>
