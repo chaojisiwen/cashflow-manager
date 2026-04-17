@@ -1181,7 +1181,7 @@ export function AssetsLiabilities({
                             <AccordionContent>
                               <div className="space-y-3">
                                 {/* 添加新记录 */}
-                                <div className="grid grid-cols-4 gap-2 p-3 bg-slate-50 rounded-lg">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 bg-slate-50 rounded-lg">
                                   <Input 
                                     type="month" 
                                     placeholder="月份"
@@ -1212,7 +1212,7 @@ export function AssetsLiabilities({
                                   <div className="flex gap-2">
                                     <Input 
                                       type="number" 
-                                      placeholder="分红"
+                                      placeholder="分红金额"
                                       value={newMonthlyRecord[equity.id]?.myDividend || ''}
                                       onChange={e => setNewMonthlyRecord(prev => ({
                                         ...prev,
@@ -1225,7 +1225,7 @@ export function AssetsLiabilities({
 
                                 {/* 历史记录 */}
                                 {equity.monthlyRecords.slice().reverse().map(record => (
-                                  <div key={record.id} className="grid grid-cols-4 gap-4 p-3 border rounded-lg text-sm">
+                                  <div key={record.id} className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 p-3 border rounded-lg text-sm">
                                     <div>{record.month}</div>
                                     <div>¥{record.revenue.toLocaleString()}</div>
                                     <div>¥{record.netProfit.toLocaleString()}</div>
